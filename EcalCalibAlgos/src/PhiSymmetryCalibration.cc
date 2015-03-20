@@ -308,6 +308,7 @@ void PhiSymmetryCalibration::analyze( const edm::Event& event, const edm::EventS
     geoHandle->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
   edm::ESHandle<EcalIntercalibConstants> ical;
   setup.get<EcalIntercalibConstantsRcd>().get(ical);
+  const EcalIntercalibConstantMap& icalMap = ical->getMap();
   edm::ESHandle<EcalADCToGeVConstant> agc;
   setup.get<EcalADCToGeVConstantRcd>().get(agc);
   edm::ESHandle<EcalLaserDbService> laser;
@@ -330,9 +331,12 @@ void PhiSymmetryCalibration::analyze( const edm::Event& event, const edm::EventS
       et= et  * oldCalibs_[hit];
       e = e  * oldCalibs_[hit];
     }
-
+    
+    // set thresholds
+    float ADCAmplitude_ = 8.;
+    eCut_barl_ = THRConverter(ADCAmplitude_, event, hit, agc, icalMap, laser);
     float et_thr = eCut_barl_/cosh(eta) + 1.;
-
+   
     int sign = hit.ieta()>0 ? 1 : 0;
 
     if (e >  eCut_barl_ && et < et_thr && e_.goodCell_barl[abs(hit.ieta())-1][hit.iphi()-1][sign]) {
