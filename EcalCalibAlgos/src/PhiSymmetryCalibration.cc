@@ -306,7 +306,13 @@ void PhiSymmetryCalibration::analyze( const edm::Event& event, const edm::EventS
     geoHandle->getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
   const CaloSubdetectorGeometry *endcapGeometry = 
     geoHandle->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
- 
+  edm::ESHandle<EcalIntercalibConstants> ical;
+  setup.get<EcalIntercalibConstantsRcd>().get(ical);
+  edm::ESHandle<EcalADCToGeVConstant> agc;
+  setup.get<EcalADCToGeVConstantRcd>().get(agc);
+  edm::ESHandle<EcalLaserDbService> laser;
+  setup.get<EcalLaserDbRecord>().get(laser);
+
   bool pass=false;
   // select interesting EcalRecHits (barrel)
   EBRecHitCollection::const_iterator itb;
@@ -638,6 +644,27 @@ void PhiSymmetryCalibration::endLuminosityBlock(edm::LuminosityBlock const& lb, 
   
   eventsinlb_=0;
 
+}
+
+float PhiSymmetryCalibration::THRConverter(float ADCAmp, const edm::Event& evt, DetId detid, edm::ESHandle<EcalADCToGeVConstant>& agc, const EcalIntercalibConstantMap& icalMap, edm::ESHandle<EcalLaserDbService>& laser) {
+  // get ADCtoGev constant
+  float AGconst = 1.;
+  if ( detid.subdetId() == EcalEndcap ) {
+       AGconst = float(agc->getEEValue());
+  } else {
+       AGconst = float(agc->getEBValue()); }
+  // get intercalibration constant
+  EcalIntercalibConstant icalconst = 1; 
+  EcalIntercalibConstantMap::const_iterator icalit = icalMap.find(detid);
+  if( icalit!=icalMap.end() ) {
+      icalconst = (*icalit); }
+  // get laser coefficient
+  float lasercalib = 1.;
+  //if ( laserCorrection_ )
+  lasercalib = laser->getLaserCorrection( detid, evt.time());
+  //convert
+  float EnergyTHR = ADCAmp * AGconst * icalconst * lasercalib;
+  return EnergyTHR;
 }
 
 DEFINE_FWK_MODULE(PhiSymmetryCalibration);

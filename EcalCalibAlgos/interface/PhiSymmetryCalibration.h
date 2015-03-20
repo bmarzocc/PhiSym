@@ -27,6 +27,12 @@
 #include "FWCore/Framework/interface/ESHandle.h"
 
 #include "CondFormats/EcalObjects/interface/EcalIntercalibConstants.h"
+#include "CondFormats/EcalObjects/interface/EcalADCToGeVConstant.h"
+#include "CondFormats/DataRecord/interface/EcalADCToGeVConstantRcd.h"
+#include "CondFormats/EcalObjects/interface/EcalIntercalibConstants.h"
+#include "CondFormats/DataRecord/interface/EcalIntercalibConstantsRcd.h"
+#include "CalibCalorimetry/EcalLaserCorrection/interface/EcalLaserDbService.h"
+#include "CalibCalorimetry/EcalLaserCorrection/interface/EcalLaserDbRecord.h"
 #include "DataFormats/DetId/interface/DetId.h"
 
 
@@ -57,6 +63,7 @@ class PhiSymmetryCalibration :  public edm::EDAnalyzer
 
   /// 
   void setUp(const edm::EventSetup& setup);
+  float THRConverter(float, const edm::Event&, DetId, edm::ESHandle<EcalADCToGeVConstant>&, const EcalIntercalibConstantMap&, edm::ESHandle<EcalLaserDbService>&);
 
  private:
 
